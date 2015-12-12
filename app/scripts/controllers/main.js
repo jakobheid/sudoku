@@ -90,9 +90,9 @@ angular.module('sudokuApp').controller(
 
 			function validateInput() {
 				_.forEach(blocks, function(block) {
-					_.forEach(block.values, function(cell, index) {
+					_.forEach(block.values, function(cell) {
 						if (cell.value && cell.value.length > 1) {
-							block[index] = cell.value.substring(0, 1);
+							cell.value = cell.value.substring(0, 1);
 						}
 					});
 				});
@@ -101,10 +101,53 @@ angular.module('sudokuApp').controller(
 			$scope.solveSudoku = function() {
 				var beforeTry = $scope.solved;
 					solveOneRound();
+				if ($scope.solved === beforeTry && $scope.solved < 81) {
+					guessOne();
+					$timeout($scope.solveSudoku, 200);
+				}
 			    if($scope.solved > beforeTry) {
 			    	$timeout($scope.solveSudoku, 200);
 			    }
 			};
+
+			function guessOne() {
+				var cell = getBestCellToGuessValue();
+				cell.value = cell.possibleValues[1];
+				cell.possibleValues = [];
+				cell.class = 'input-small-red';
+			}
+
+			function getBestCellToGuessValue() {
+				return _.reduce(blocks, function(left, right) {
+					return chooseBetterCell(getBestCell(left), getBestCell(right));
+				});
+			}
+
+			function getBestCell(input) {
+				if(input.values) {
+					return _.reduce(input.values, function(left, right) {
+						return chooseBetterCell(left, right);
+					});
+				// the values are allready reduced to one cell	
+				} else {
+					return input;
+				}
+			}
+
+			function chooseBetterCell(left, right) {
+					if(left.possibleValues.length === 0){
+						return right;
+					} else if(right.possibleValues.length === 0) {
+						return left;
+					} else if(left.possibleValues.length <= right.possibleValues.length) {
+						return left;
+					} else {
+						return right;
+					}
+			
+			}
+			
+			
 
 			function solveOneRound() {
 				updatePossibleValues();
@@ -242,7 +285,7 @@ angular.module('sudokuApp').controller(
 				});
 			}
 
-						$scope.b11 = createInitialBlock(0);
+			$scope.b11 = createInitialBlock(0);
 			$scope.b12 = createInitialBlock(1);
 			$scope.b13 = createInitialBlock(2);
 			$scope.b21 = createInitialBlock(3);
@@ -263,15 +306,11 @@ angular.module('sudokuApp').controller(
 			blocks[8] = $scope.b33;
 
 			$scope.b11.values[0].value = 5;
-			$scope.b11.values[1].value = 3;
 			$scope.b11.values[3].value = 6;
-			$scope.b11.values[7].value = 9;
 			$scope.b11.values[8].value = 8;
 
 			$scope.b12.values[1].value = 7;
-			$scope.b12.values[3].value = 1;
 			$scope.b12.values[4].value = 9;
-			$scope.b12.values[5].value = 5;
 
 			$scope.b13.values[7].value = 6;
 

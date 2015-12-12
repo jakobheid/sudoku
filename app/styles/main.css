@@ -35,6 +35,12 @@ body {
     color: blue; 
 }
 
+.input-small-red {
+    width: 40px;
+    text-align: center;
+    color: red; 
+}
+
 /* Everything but the jumbotron gets side spacing for mobile first views */
 .header,
 .marketing,
