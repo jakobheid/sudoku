@@ -7,7 +7,7 @@
  */
 angular.module('sudokuApp').controller(
 		'MainCtrl',
-		function($scope, _) {
+		function($scope, _, $timeout) {
 			var blocks = []; 
 
 			var horizontalLines = {
@@ -99,12 +99,11 @@ angular.module('sudokuApp').controller(
 			}
 
 			$scope.solveSudoku = function() {
-				var beforeTry;
-				do {
-					beforeTry = $scope.solved;
+				var beforeTry = $scope.solved;
 					solveOneRound();
-				}
-				while($scope.solved > beforeTry);
+			    if($scope.solved > beforeTry) {
+			    	$timeout($scope.solveSudoku, 200);
+			    }
 			};
 
 			function solveOneRound() {
