@@ -33,9 +33,13 @@ angular
       .otherwise({
         redirectTo: '/'
       });
-  }).factory('_', ['$window',
+  });
+
+  angular.module('sudokuApp').factory('_', ['$window',
       function($window) {
         // place lodash include before angular
         return $window._;
       }
     ]);
+
+
