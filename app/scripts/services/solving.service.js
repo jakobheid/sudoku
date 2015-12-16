@@ -2,15 +2,15 @@
 
 angular.module('sudokuApp').factory('SolvingService', function(_) {
 
-	function findNakedSingle(blocks, horizontalLines, verticalLines) {
-		_.forEach(blocks, function(block) {
+	function findNakedSingle(sudoku) { 
+		_.forEach(sudoku.blocks, function(block) {
 			_.forEach(block.values, function(cell) {
 				if (cell.value) {
 					cell.possibleValues = [];
 				} else {
 					removeAllValuesFromBlock(block, cell);
-					removeAllValuesHorizontal(cell, horizontalLines);
-					removeAllValuesVertical(cell, verticalLines);
+					removeAllValuesHorizontal(cell, sudoku.horizontalLines);
+					removeAllValuesVertical(cell, sudoku.verticalLines);
 				}
 			});
 		});
@@ -114,13 +114,86 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 		return _.includes([ 1, 4, 7 ], index);
 	}
 
+	function createEmptySudoku() {
+		var result = {
+			blocks: [],
+			horizontalLines: {
+				0 : [],
+				1 : [],
+				2 : [],
+				3 : [],
+				4 : [],
+				5 : [],
+				6 : [],
+				7 : [],
+				8 : [],
+				9 : []},
+				verticalLines: {
+					0 : [],
+					1 : [],
+					2 : [],
+					3 : [],
+					4 : [],
+					5 : [],
+					6 : [],
+					7 : [],
+					8 : [],
+					9 : []}
+				};
 
 
-	return {
-		findNakedSingle:findNakedSingle,
-		getRow:getRow,
-		getColumn:getColumn,
-		isSameCell:isSameCell
-	};
-});
+
+				function createInitialBlock(blockIndex) {
+					var currentCell, result = [];
+					for ( var i = 0; i < 9; i++) {
+						currentCell = createCell(i, blockIndex);
+						pushToLinesArrays(currentCell);
+						result.push(currentCell);
+					}
+					return {
+						index : blockIndex,
+						values : result
+					};
+				}
+
+				function pushToLinesArrays(cell) {
+					var row = getRow(cell);
+					result.horizontalLines[row].push(cell);
+
+					var column = getColumn(cell);
+					result.verticalLines[column].push(cell);
+				}
+
+				function createCell(i, bIndex) {
+					return {
+						index : i,
+						blockIndex : bIndex,
+						value : null,
+						possibleValues : [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ],
+						class: 'input-small'
+					};
+				}
+
+				result.blocks[0] = createInitialBlock(0);
+				result.blocks[1] = createInitialBlock(1);
+				result.blocks[2] = createInitialBlock(2);
+				result.blocks[3] = createInitialBlock(3);
+				result.blocks[4] = createInitialBlock(4);
+				result.blocks[5] = createInitialBlock(5);
+				result.blocks[6] = createInitialBlock(6);
+				result.blocks[7] = createInitialBlock(7);
+				result.blocks[8] = createInitialBlock(8);
+
+				return result;
+			}
+
+
+			return {
+				findNakedSingle:findNakedSingle,
+				getRow:getRow,
+				getColumn:getColumn,
+				isSameCell:isSameCell,
+				createEmptySudoku:createEmptySudoku
+			};
+		});
 

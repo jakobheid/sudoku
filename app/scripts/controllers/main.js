@@ -8,69 +8,19 @@
  angular.module('sudokuApp').controller(
  	'MainCtrl',
  	function($scope, _, $timeout, SolvingService) {
- 		var blocks = []; 
+
+ 		var sudoku = SolvingService.createEmptySudoku();
+ 		var blocks = sudoku.blocks;
+ 		var horizontalLines = sudoku.horizontalLines;
+ 		var verticalLines = sudoku.verticalLines;
+
+
  		var guessing = false;
-
- 		var horizontalLines = {
- 			0 : [],
- 			1 : [],
- 			2 : [],
- 			3 : [],
- 			4 : [],
- 			5 : [],
- 			6 : [],
- 			7 : [],
- 			8 : [],
- 			9 : []
- 		}; 
-
- 		var verticalLines = {
- 			0 : [],
- 			1 : [],
- 			2 : [],
- 			3 : [],
- 			4 : [],
- 			5 : [],
- 			6 : [],
- 			7 : [],
- 			8 : [],
- 			9 : []
- 		};
-
  		$scope.solved = 0;
 
 
 
- 		function createInitialBlock(blockIndex) {
- 			var currentCell, result = [];
- 			for ( var i = 0; i < 9; i++) {
- 				currentCell = createCell(i, blockIndex);
- 				pushToLinesArrays(currentCell);
- 				result.push(currentCell);
- 			}
- 			return {
- 				index : blockIndex,
- 				values : result
- 			};
- 		}
-
- 		function pushToLinesArrays(cell) {
- 			var row = SolvingService.getRow(cell);
- 			horizontalLines[row].push(cell);
-
- 			var column = SolvingService.getColumn(cell);
- 			verticalLines[column].push(cell);
- 		}
-
- 		function createCell(i, bIndex) {
- 			return {
- 				index : i,
- 				blockIndex : bIndex,
- 				value : null,
- 				possibleValues : [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ],
- 				class: 'input-small'
- 			};
- 		}
+ 		
 
  		function updateSolvedCount() {
  			var count = 0;
@@ -153,8 +103,6 @@
 			
 		}
 
-
-
 		function solveOneRound() {
 			SolvingService.findNakedSingle(blocks, horizontalLines, verticalLines);
 			updateValues();
@@ -233,27 +181,16 @@
 				});
 			});
 		}
-		
 
-		$scope.b11 = createInitialBlock(0);
-		$scope.b12 = createInitialBlock(1);
-		$scope.b13 = createInitialBlock(2);
-		$scope.b21 = createInitialBlock(3);
-		$scope.b22 = createInitialBlock(4);
-		$scope.b23 = createInitialBlock(5);
-		$scope.b31 = createInitialBlock(6);
-		$scope.b32 = createInitialBlock(7);
-		$scope.b33 = createInitialBlock(8);
-
-		blocks[0] = $scope.b11;
-		blocks[1] = $scope.b12;
-		blocks[2] = $scope.b13;
-		blocks[3] = $scope.b21;
-		blocks[4] = $scope.b22;
-		blocks[5] = $scope.b23;
-		blocks[6] = $scope.b31;
-		blocks[7] = $scope.b32;
-		blocks[8] = $scope.b33;
+		$scope.b11 = sudoku.blocks[0];
+		$scope.b12 = sudoku.blocks[1];
+		$scope.b13 = sudoku.blocks[2];
+		$scope.b21 = sudoku.blocks[3];
+		$scope.b22 = sudoku.blocks[4];
+		$scope.b23 = sudoku.blocks[5];
+		$scope.b31 = sudoku.blocks[6];
+		$scope.b32 = sudoku.blocks[7];
+		$scope.b33 = sudoku.blocks[8];
 
 		$scope.b11.values[0].value = 5;
 		$scope.b11.values[3].value = 6;
