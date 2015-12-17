@@ -33,4 +33,24 @@ describe('Service: SolvingService', function () {
     expect(sudoku.blocks[4].values[1].possibleValues[0]).toBe(9);
   });
 
+   it('should find hidden single', function () {
+
+    // given
+    var sudoku = SolvingService.createEmptySudoku();
+    sudoku.blocks[1].values[6].value = 1;
+    sudoku.blocks[4].values[4].value = 2;
+    sudoku.blocks[4].values[7].value = 3;
+    sudoku.blocks[7].values[5].value = 1;
+    SolvingService.findNakedSingle(sudoku);
+    SolvingService.updateValues(sudoku.blocks);
+
+    // when
+    SolvingService.findHiddenSingle(sudoku);
+    
+    // then
+    console.log(sudoku.blocks[4].values[1].possibleValues); 
+    expect(sudoku.blocks[4].values[1].possibleValues.length).toBe(1);
+    expect(sudoku.blocks[4].values[1].possibleValues[0]).toBe(1);
+  });
+
 });

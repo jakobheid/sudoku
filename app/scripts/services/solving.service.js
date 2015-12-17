@@ -5,9 +5,7 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 	function findNakedSingle(sudoku) { 
 		_.forEach(sudoku.blocks, function(block) {
 			_.forEach(block.values, function(cell) {
-				if (cell.value) {
-					cell.possibleValues = [];
-				} else {
+				if (!cell.value) {
 					removeAllValuesFromBlock(block, cell);
 					removeAllValuesHorizontal(cell, sudoku.horizontalLines);
 					removeAllValuesVertical(cell, sudoku.verticalLines);
@@ -15,6 +13,34 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 			});
 		});
 	}
+
+	function findHiddenSingle(sudoku) { 
+		_.forEach(sudoku.blocks, function(block) {
+			_.forEach(block.values, function(cell) {
+				if (!cell.value) {
+					reduceToSinglePossibleValue(block, cell);
+				}
+			});
+		});
+	}
+
+    function reduceToSinglePossibleValue(block, cell) {
+    	var uniquePossibleValue;
+    	_.forEach(cell.possibleValues, function(possibleValue) {
+    		var unique = true;
+    		_.forEach(block.values, function(otherCell) {
+    			if(!isSameCell(cell, otherCell)) {
+    				unique = unique && ! _.includes(otherCell.possibleValues, possibleValue);
+    			}
+    		});
+    		if(unique) {
+    			uniquePossibleValue = possibleValue;
+    		}
+    	});
+    	if(uniquePossibleValue) {
+    		cell.possibleValues = [uniquePossibleValue];
+    	}
+    }
 
 	function removeAllValuesFromBlock(block, thisCell) {
 		removeAllValuesFromArray(block.values, thisCell);
@@ -187,13 +213,30 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 				return result;
 			}
 
+			function updateValues(blocks) {
+			_.forEach(blocks, function(block) {
+				_.forEach(block.values, function(cell) {
+					if (!cell.value && cell.possibleValues.length === 1) {
+						cell.value = cell.possibleValues[0];
+						cell.possibleValues = [];
+						cell.class = 'input-small';
+					}
+					if(cell.value && cell.possibleValues.length !== 0) {
+						cell.possibleValues = [];
+					}
+				});
+			});
+		}
+
 
 			return {
 				findNakedSingle:findNakedSingle,
+				findHiddenSingle:findHiddenSingle,
 				getRow:getRow,
 				getColumn:getColumn,
 				isSameCell:isSameCell,
-				createEmptySudoku:createEmptySudoku
+				createEmptySudoku:createEmptySudoku,
+				updateValues:updateValues
 			};
 		});
 

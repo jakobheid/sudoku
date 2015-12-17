@@ -14,13 +14,8 @@
  		var horizontalLines = sudoku.horizontalLines;
  		var verticalLines = sudoku.verticalLines;
 
-
  		var guessing = false;
  		$scope.solved = 0;
-
-
-
- 		
 
  		function updateSolvedCount() {
  			var count = 0;
@@ -49,6 +44,20 @@
  			});
  		}
 
+ 		$scope.solveSudokuFast = function() {
+ 			var beforeTry = $scope.solved;
+ 			solveOneRound();
+ 			var afterTry = $scope.solved;
+ 			validateModel();
+ 			if (afterTry === beforeTry && afterTry < 81) {
+ 				guessOne();
+ 				$timeout($scope.solveSudokuFast, 1);
+ 			}
+ 			if(afterTry < 81) {
+ 				$timeout($scope.solveSudokuFast, 1);
+ 			}
+ 		};
+
  		$scope.solveSudoku = function() {
  			var beforeTry = $scope.solved;
  			solveOneRound();
@@ -56,10 +65,6 @@
  			validateModel();
  			if (afterTry === beforeTry && afterTry < 81) {
  				guessOne();
- 				$timeout($scope.solveSudoku, 1);
- 			}
- 			if(afterTry < 81) {
- 				$timeout($scope.solveSudoku, 1);
  			}
  		};
 
@@ -104,24 +109,11 @@
 		}
 
 		function solveOneRound() {
-			SolvingService.findNakedSingle(blocks, horizontalLines, verticalLines);
-			updateValues();
+			SolvingService.findNakedSingle(sudoku);
+			SolvingService.findHiddenSingle(sudoku);
+			SolvingService.updateValues(blocks);
 			updateSolvedCount();
 		}
-
-		function updateValues() {
-			_.forEach(blocks, function(block) {
-				_.forEach(block.values, function(cell) {
-					if (!cell.value && cell.possibleValues.length === 1) {
-						cell.value = cell.possibleValues[0];
-						cell.possibleValues = [];
-						cell.class = 'input-small';
-					}
-				});
-			});
-		}
-
-		
 
 		function validateModel() {
 			_.forEach(blocks, function(block) {
