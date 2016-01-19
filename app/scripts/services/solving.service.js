@@ -2,6 +2,71 @@
 
 angular.module('sudokuApp').factory('SolvingService', function(_) {
 
+	function findHiddenDouble(sudoku) { 
+		_.forEach(sudoku.blocks, function(block) {
+			var countByValue = {}, cellIndexByValue = {};
+			_.forEach(block.values, function(cell) {
+				if (!cell.value) {
+					_.forEach(cell.possibleValues, function(possibleValue) {
+						incrementCountOfValue(possibleValue, countByValue, cellIndexByValue, cell.index);
+					});
+				}
+			});
+			var valuesByCount = revertObject(countByValue);
+
+			//console.log(countByValue);
+			//console.log(valuesByCount);
+			//console.log(cellIndexByValue);
+
+			// double
+			var possibleHiddenDouble = valuesByCount[2];
+			if(possibleHiddenDouble) {
+				var leftCells = cellIndexByValue[possibleHiddenDouble[0]];
+				var rightCells = cellIndexByValue[possibleHiddenDouble[1]];
+				if(_.isEqual(leftCells.sort(), rightCells.sort())) {
+					_.forEach(block.values, function(cell) {
+						if(_.includes(leftCells, cell.index) && cell.possibleValues.length > 2) {
+							console.log("removing hidden double for cell "+ cell.blockIndex + ":" + cell.index);
+							_.remove(cell.possibleValues, function(possibleValue) {
+								return !_.includes(possibleHiddenDouble, possibleValue.toString());
+							});
+						}
+					});
+				}
+			}
+		});
+	}
+
+	function revertObject(original) {
+		var reverted = {};
+		_.forOwn(original, function(theCount, theValue) {
+			var valueArray = reverted[theCount];
+  			if(!valueArray) {
+  				valueArray = [];
+  				reverted[theCount] = valueArray;
+  			}
+  			valueArray.push(theValue);
+		});
+		return reverted;
+	}
+
+	function incrementCountOfValue(possibleValue, countByValue, cellIndexByValue, cellIndex) {
+		var actualCount = countByValue[possibleValue];
+		if(!actualCount) {
+			countByValue[possibleValue] = 1;
+		} else {
+			countByValue[possibleValue]++;
+		}
+
+		var actualCellsForValue = cellIndexByValue[possibleValue];
+		if(!actualCellsForValue) {
+			actualCellsForValue = [];
+			cellIndexByValue[possibleValue] = actualCellsForValue;
+		}
+		actualCellsForValue.push(cellIndex);
+	}
+
+
 	function findNakedSingle(sudoku) { 
 		_.forEach(sudoku.blocks, function(block) {
 			_.forEach(block.values, function(cell) {
@@ -24,23 +89,23 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 		});
 	}
 
-    function reduceToSinglePossibleValue(block, cell) {
-    	var uniquePossibleValue;
-    	_.forEach(cell.possibleValues, function(possibleValue) {
-    		var unique = true;
-    		_.forEach(block.values, function(otherCell) {
-    			if(!isSameCell(cell, otherCell)) {
-    				unique = unique && ! _.includes(otherCell.possibleValues, possibleValue);
-    			}
-    		});
-    		if(unique) {
-    			uniquePossibleValue = possibleValue;
-    		}
-    	});
-    	if(uniquePossibleValue) {
-    		cell.possibleValues = [uniquePossibleValue];
-    	}
-    }
+	function reduceToSinglePossibleValue(block, cell) {
+		var uniquePossibleValue;
+		_.forEach(cell.possibleValues, function(possibleValue) {
+			var unique = true;
+			_.forEach(block.values, function(otherCell) {
+				if(!isSameCell(cell, otherCell)) {
+					unique = unique && ! _.includes(otherCell.possibleValues, possibleValue);
+				}
+			});
+			if(unique) {
+				uniquePossibleValue = possibleValue;
+			}
+		});
+		if(uniquePossibleValue) {
+			cell.possibleValues = [uniquePossibleValue];
+		}
+	}
 
 	function removeAllValuesFromBlock(block, thisCell) {
 		removeAllValuesFromArray(block.values, thisCell);
@@ -214,22 +279,23 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 			}
 
 			function updateValues(blocks) {
-			_.forEach(blocks, function(block) {
-				_.forEach(block.values, function(cell) {
-					if (!cell.value && cell.possibleValues.length === 1) {
-						cell.value = cell.possibleValues[0];
-						cell.possibleValues = [];
-						cell.class = 'input-small';
-					}
-					if(cell.value && cell.possibleValues.length !== 0) {
-						cell.possibleValues = [];
-					}
+				_.forEach(blocks, function(block) {
+					_.forEach(block.values, function(cell) {
+						if (!cell.value && cell.possibleValues.length === 1) {
+							cell.value = cell.possibleValues[0];
+							cell.possibleValues = [];
+							cell.class = 'input-small';
+						}
+						if(cell.value && cell.possibleValues.length !== 0) {
+							cell.possibleValues = [];
+						}
+					});
 				});
-			});
-		}
+			}
 
 
 			return {
+				findHiddenDouble:findHiddenDouble,
 				findNakedSingle:findNakedSingle,
 				findHiddenSingle:findHiddenSingle,
 				getRow:getRow,
