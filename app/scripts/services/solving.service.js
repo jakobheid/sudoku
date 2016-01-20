@@ -2,30 +2,49 @@
 
 angular.module('sudokuApp').factory('SolvingService', function(_) {
 
-	function findHiddenDouble(sudoku) { 
+	function findHiddenDouble(sudoku) {
+		findHiddenDoubleInBlock(sudoku);
+		findHiddenDoubleVertical(sudoku);
+		findHiddenDoubleHorizontal(sudoku);
+	} 
+
+	function findHiddenDoubleVertical(sudoku) {
+		_.forEach(sudoku.verticalLines, function(line) {
+			findHiddenDoubleInCells(line);
+		});
+	}	
+
+	function findHiddenDoubleHorizontal(sudoku) {
+		_.forEach(sudoku.horizontalLines, function(line) {
+			findHiddenDoubleInCells(line);
+		});
+	}
+
+	function findHiddenDoubleInBlock(sudoku) {
 		_.forEach(sudoku.blocks, function(block) {
-			var countByValue = {}, cellIndexByValue = {};
-			_.forEach(block.values, function(cell) {
+			findHiddenDoubleInCells(block.values);
+		});
+	}
+
+	function findHiddenDoubleInCells(cellArray) { 
+			var countByValue = {}, cellsByValue = {};
+			_.forEach(cellArray, function(cell) {
 				if (!cell.value) {
 					_.forEach(cell.possibleValues, function(possibleValue) {
-						incrementCountOfValue(possibleValue, countByValue, cellIndexByValue, cell.index);
+						incrementCountOfValue(possibleValue, countByValue, cellsByValue, cell);
 					});
 				}
 			});
 			var valuesByCount = revertObject(countByValue);
 
-			//console.log(countByValue);
-			//console.log(valuesByCount);
-			//console.log(cellIndexByValue);
-
 			// double
 			var possibleHiddenDouble = valuesByCount[2];
 			if(possibleHiddenDouble) {
-				var leftCells = cellIndexByValue[possibleHiddenDouble[0]];
-				var rightCells = cellIndexByValue[possibleHiddenDouble[1]];
-				if(_.isEqual(leftCells.sort(), rightCells.sort())) {
-					_.forEach(block.values, function(cell) {
-						if(_.includes(leftCells, cell.index) && cell.possibleValues.length > 2) {
+				var leftCells = cellsByValue[possibleHiddenDouble[0]];
+				var rightCells = cellsByValue[possibleHiddenDouble[1]];
+				if(_.isEqual(leftCells, rightCells)) {
+					_.forEach(leftCells, function(cell) {
+						if(cell.possibleValues.length > 2) {
 							console.log("removing hidden double for cell "+ cell.blockIndex + ":" + cell.index);
 							_.remove(cell.possibleValues, function(possibleValue) {
 								return !_.includes(possibleHiddenDouble, possibleValue.toString());
@@ -34,8 +53,9 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 					});
 				}
 			}
-		});
 	}
+
+	
 
 	function revertObject(original) {
 		var reverted = {};
@@ -50,7 +70,7 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 		return reverted;
 	}
 
-	function incrementCountOfValue(possibleValue, countByValue, cellIndexByValue, cellIndex) {
+	function incrementCountOfValue(possibleValue, countByValue, cellsByValue, cell) {
 		var actualCount = countByValue[possibleValue];
 		if(!actualCount) {
 			countByValue[possibleValue] = 1;
@@ -58,12 +78,12 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 			countByValue[possibleValue]++;
 		}
 
-		var actualCellsForValue = cellIndexByValue[possibleValue];
+		var actualCellsForValue = cellsByValue[possibleValue];
 		if(!actualCellsForValue) {
 			actualCellsForValue = [];
-			cellIndexByValue[possibleValue] = actualCellsForValue;
+			cellsByValue[possibleValue] = actualCellsForValue;
 		}
-		actualCellsForValue.push(cellIndex);
+		actualCellsForValue.push(cell);
 	}
 
 
@@ -232,12 +252,10 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 					9 : []}
 				};
 
-
-
 				function createInitialBlock(blockIndex) {
 					var currentCell, result = [];
 					for ( var i = 0; i < 9; i++) {
-						currentCell = createCell(i, blockIndex);
+						currentCell = new Cell(i, blockIndex);
 						pushToLinesArrays(currentCell);
 						result.push(currentCell);
 					}
@@ -255,16 +273,7 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 					result.verticalLines[column].push(cell);
 				}
 
-				function createCell(i, bIndex) {
-					return {
-						index : i,
-						blockIndex : bIndex,
-						value : null,
-						possibleValues : [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ],
-						class: 'input-small'
-					};
-				}
-
+				
 				result.blocks[0] = createInitialBlock(0);
 				result.blocks[1] = createInitialBlock(1);
 				result.blocks[2] = createInitialBlock(2);
@@ -276,6 +285,24 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 				result.blocks[8] = createInitialBlock(8);
 
 				return result;
+			}
+
+			function Cell(i, bIndex) {
+  				this.index = i;
+  				this.blockIndex = bIndex;
+  				this.value = null;
+  				this.possibleValues = [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ];
+  				this.class = 'input-small';
+			}
+
+			Cell.prototype.equals = function(other) {
+  				return other !== null && 
+  					this.index === other.index && 
+  					this.blockIndex === other.blockIndex;
+			};
+
+			Cell.prototype.isInCellArray = function(cellArray) {
+				return _.includes(cellArray, this);
 			}
 
 			function updateValues(blocks) {
