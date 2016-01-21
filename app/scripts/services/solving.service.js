@@ -2,31 +2,31 @@
 
 angular.module('sudokuApp').factory('SolvingService', function(_) {
 
-	function findHiddenDouble(sudoku) {
-		findHiddenDoubleInBlock(sudoku);
-		findHiddenDoubleVertical(sudoku);
-		findHiddenDoubleHorizontal(sudoku);
+	function findHiddenSubset(sudoku) {
+		findHiddenSubsetInBlock(sudoku);
+		findHiddenSubsetVertical(sudoku);
+		findHiddenSubsetHorizontal(sudoku);
 	} 
 
-	function findHiddenDoubleVertical(sudoku) {
+	function findHiddenSubsetVertical(sudoku) {
 		_.forEach(sudoku.verticalLines, function(line) {
-			findHiddenDoubleInCells(line);
+			findHiddenSubsetInCells(line);
 		});
 	}	
 
-	function findHiddenDoubleHorizontal(sudoku) {
+	function findHiddenSubsetHorizontal(sudoku) {
 		_.forEach(sudoku.horizontalLines, function(line) {
-			findHiddenDoubleInCells(line);
+			findHiddenSubsetInCells(line);
 		});
 	}
 
-	function findHiddenDoubleInBlock(sudoku) {
+	function findHiddenSubsetInBlock(sudoku) {
 		_.forEach(sudoku.blocks, function(block) {
-			findHiddenDoubleInCells(block.values);
+			findHiddenSubsetInCells(block.values);
 		});
 	}
 
-	function findHiddenDoubleInCells(cellArray) { 
+	function findHiddenSubsetInCells(cellArray) { 
 			var countByValue = {}, cellsByValue = {};
 			_.forEach(cellArray, function(cell) {
 				if (!cell.value) {
@@ -38,24 +38,56 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 			var valuesByCount = revertObject(countByValue);
 
 			// double
-			var possibleHiddenDouble = valuesByCount[2];
-			if(possibleHiddenDouble) {
-				var leftCells = cellsByValue[possibleHiddenDouble[0]];
-				var rightCells = cellsByValue[possibleHiddenDouble[1]];
-				if(_.isEqual(leftCells, rightCells)) {
-					_.forEach(leftCells, function(cell) {
-						if(cell.possibleValues.length > 2) {
-							console.log("removing hidden double for cell "+ cell.blockIndex + ":" + cell.index);
-							_.remove(cell.possibleValues, function(possibleValue) {
-								return !_.includes(possibleHiddenDouble, possibleValue.toString());
-							});
-						}
-					});
-				}
-			}
+			findHiddenSubsetForCount(valuesByCount, cellsByValue, 2);
+
+			// tripple
+			findHiddenSubsetForCount(valuesByCount, cellsByValue, 3);
+
+			// quadrupple
+			findHiddenSubsetForCount(valuesByCount, cellsByValue, 3);
 	}
 
+	function findHiddenSubsetForCount(valuesByCount, cellsByValue, count) {
+			findHiddenSubsetCells(valuesByCount[count], cellsByValue, count);
+	}
+
+    function findHiddenSubsetCells(hiddenSubsetValues, cellsByValue, count) {
+    	var hiddenCellsByKey = {};
+    	_.forEach(hiddenSubsetValues, function(hiddenValue){
+    		var cellsOfHiddenValue = cellsByValue[hiddenValue];
+    		var key = createCellsKey(cellsOfHiddenValue);
+    		var hiddenObjects = hiddenCellsByKey[key];
+    		if(!hiddenObjects) {
+    			hiddenObjects = [];
+    			hiddenCellsByKey[key] = hiddenObjects;
+    		}
+    		hiddenObjects.push({
+    				cells: cellsOfHiddenValue,
+    				value:hiddenValue
+    			});
+    	});
+    	_.forOwn(hiddenCellsByKey, function(hiddenObjects){
+    		if(hiddenObjects.length === count) {
+    			var hiddenSubset = _.pluck(hiddenObjects, 'value');
+    			_.forEach(hiddenObjects[0].cells, function(cell){
+    				if(cell.possibleValues.length > count) {
+							console.log("removing hidden subset " + count+ " for cell "+ cell.blockIndex + ":" + cell.index);
+							_.remove(cell.possibleValues, function(possibleValue) {
+								return !_.includes(hiddenSubset, possibleValue.toString());
+							});
+						}
+    			});
+    		}
+    	});
+    }
 	
+	function createCellsKey(cells) {
+		var result = "";
+		_.forEach(cells, function(cell){
+			result += cell.blockIndex + ":"+ cell.index+";";
+		});
+		return result;
+	}
 
 	function revertObject(original) {
 		var reverted = {};
@@ -322,7 +354,7 @@ angular.module('sudokuApp').factory('SolvingService', function(_) {
 
 
 			return {
-				findHiddenDouble:findHiddenDouble,
+				findHiddenSubset:findHiddenSubset,
 				findNakedSingle:findNakedSingle,
 				findHiddenSingle:findHiddenSingle,
 				getRow:getRow,

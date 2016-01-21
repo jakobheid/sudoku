@@ -70,7 +70,7 @@ describe('Service: SolvingService', function () {
     SolvingService.updateValues(sudoku.blocks);
 
     // when
-    SolvingService.findHiddenDouble(sudoku);
+    SolvingService.findHiddenSubset(sudoku);
     
     // then
     expect(sudoku.blocks[4].values[0].possibleValues).toEqual([2, 3, 5, 8]);
@@ -82,6 +82,68 @@ describe('Service: SolvingService', function () {
     expect(sudoku.blocks[4].values[6].possibleValues).toEqual([2, 3, 9]);
     expect(sudoku.blocks[4].values[7].possibleValues).toEqual([2, 3, 5, 7]);
     expect(sudoku.blocks[4].values[8].possibleValues).toEqual([1, 4]);
+  });
+
+it('should find hidden tripple in block', function () {
+
+    // given
+    var sudoku = SolvingService.createEmptySudoku();
+    sudoku.blocks[4].values[0].possibleValues = [2, 3, 5, 8];
+    sudoku.blocks[4].values[1].possibleValues = [1, 4, 7, 8];
+    sudoku.blocks[4].values[2].possibleValues = [3, 8, 9];
+    sudoku.blocks[4].values[3].possibleValues = [3, 6, 8, 9];
+    sudoku.blocks[4].values[4].possibleValues = [2, 3, 5, 6, 9];
+    sudoku.blocks[4].values[5].possibleValues = [2, 5, 6, 9];
+    sudoku.blocks[4].values[6].possibleValues = [1, 2, 3, 4, 7, 9];
+    sudoku.blocks[4].values[7].possibleValues = [2, 3, 5];
+    sudoku.blocks[4].values[8].possibleValues = [1, 2, 3, 4, 5, 7, 8];
+    SolvingService.findNakedSingle(sudoku);
+    SolvingService.updateValues(sudoku.blocks);
+
+    // when
+    SolvingService.findHiddenSubset(sudoku);
+    
+    // then
+    expect(sudoku.blocks[4].values[0].possibleValues).toEqual([2, 3, 5, 8]);
+    expect(sudoku.blocks[4].values[1].possibleValues).toEqual([1, 4, 7]);
+    expect(sudoku.blocks[4].values[2].possibleValues).toEqual([3, 8, 9]);
+    expect(sudoku.blocks[4].values[3].possibleValues).toEqual([3, 6, 8, 9]);
+    expect(sudoku.blocks[4].values[4].possibleValues).toEqual([2, 3, 5, 6, 9]);
+    expect(sudoku.blocks[4].values[5].possibleValues).toEqual([2, 5, 6, 9]);
+    expect(sudoku.blocks[4].values[6].possibleValues).toEqual([1, 4, 7]);
+    expect(sudoku.blocks[4].values[7].possibleValues).toEqual([2, 3, 5]);
+    expect(sudoku.blocks[4].values[8].possibleValues).toEqual([1, 4, 7]);
+  });
+
+it('should find two hidden tripples in block', function () {
+
+    // given
+    var sudoku = SolvingService.createEmptySudoku();
+    sudoku.blocks[4].values[0].possibleValues = [2, 3, 5, 8];
+    sudoku.blocks[4].values[1].possibleValues = [1, 4, 7, 8];
+    sudoku.blocks[4].values[2].possibleValues = [8, 9];
+    sudoku.blocks[4].values[3].possibleValues = [6, 8, 9];
+    sudoku.blocks[4].values[4].possibleValues = [2, 3, 5, 6, 9];
+    sudoku.blocks[4].values[5].possibleValues = [6, 9];
+    sudoku.blocks[4].values[6].possibleValues = [1, 4, 7, 9];
+    sudoku.blocks[4].values[7].possibleValues = [2, 3, 5];
+    sudoku.blocks[4].values[8].possibleValues = [1, 4, 7, 8];
+    SolvingService.findNakedSingle(sudoku);
+    SolvingService.updateValues(sudoku.blocks);
+
+    // when
+    SolvingService.findHiddenSubset(sudoku);
+    
+    // then
+    expect(sudoku.blocks[4].values[0].possibleValues).toEqual([2, 3, 5]);
+    expect(sudoku.blocks[4].values[1].possibleValues).toEqual([1, 4, 7]);
+    expect(sudoku.blocks[4].values[2].possibleValues).toEqual([8, 9]);
+    expect(sudoku.blocks[4].values[3].possibleValues).toEqual([6, 8, 9]);
+    expect(sudoku.blocks[4].values[4].possibleValues).toEqual([2, 3, 5]);
+    expect(sudoku.blocks[4].values[5].possibleValues).toEqual([6, 9]);
+    expect(sudoku.blocks[4].values[6].possibleValues).toEqual([1, 4, 7]);
+    expect(sudoku.blocks[4].values[7].possibleValues).toEqual([2, 3, 5]);
+    expect(sudoku.blocks[4].values[8].possibleValues).toEqual([1, 4, 7]);
   });
 
  it('should find hidden double horizontal', function () {
@@ -101,7 +163,7 @@ describe('Service: SolvingService', function () {
     SolvingService.updateValues(sudoku.blocks);
 
     // when
-    SolvingService.findHiddenDouble(sudoku);
+    SolvingService.findHiddenSubset(sudoku);
     
     // then
     expect(sudoku.blocks[0].values[0].possibleValues).toEqual([2, 3, 5, 8]);
@@ -132,7 +194,7 @@ it('should find hidden double vertical', function () {
     SolvingService.updateValues(sudoku.blocks);
 
     // when
-    SolvingService.findHiddenDouble(sudoku);
+    SolvingService.findHiddenSubset(sudoku);
     
     // then
     expect(sudoku.blocks[0].values[0].possibleValues).toEqual([2, 3, 5, 8]);
